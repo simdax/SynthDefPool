@@ -1,3 +1,5 @@
+
+
 /*
 	SynthDefPool - a quark to facilitate sharing SynthDefs in a structured way
 	Created by Dan Stowell 2009
@@ -5,7 +7,7 @@
 */
 SynthDefPool {
 
-	classvar <global, <root;
+	classvar <global, <root, <list;
 	var <poolpath, <dict;
 
 
@@ -17,9 +19,29 @@ SynthDefPool {
 		(poolpath ++ "/*.scd").pathMatch.do{ |apath|
 			// Lazy loading - ignore the file contents for now
 			dict.put(apath.basename.splitext[0].asSymbol, 0); // we put "0" because can't actually put nil into a dictionary...
+			list=list.add(apath.basename.splitext[0].asSymbol)
 		};
 	}
+	// do metaData for this
+	*types{ ^(
 
+		percussion:
+		Set[\clap_oto309, \cymbal808_ryan, \cymbalic_mcld, \kick_chrp, \kick_oto309, \oneclap_thor, \snare_oto309, \snare_stein, \beating, \blips1, \defaultB, \hihat, \kick3, \kick808, \kick, \kik, \kraftySnr, \ringKick, \snare ]
+	)}
+	*choose{ arg type, not=true;
+		^ type !? {
+			if(not.not)
+			{var t; t=list.choose;
+				while{this.types[type].includes(t)}
+				{t=list.choose}; t
+			}
+			{this.types[type].choose}
+		}
+		?? {list.choose}
+	}
+	*listGui{ arg p,b;
+		^EZListView(p,b).items_(list)
+	}
 	*initClass {
 		global=IdentityDictionary();
 		StartUp.add{
@@ -60,6 +82,7 @@ SynthDefPool {
 				var gui, vkk, pg;
 				gui=x.value(parent);
 				vkk=vk.copy; vkk.fen(parent);
+				//pattern 
 				pg=patGui.deepCopy; pg.init(parent);
 				gui.children[0]
 				.addAction{
@@ -193,3 +216,6 @@ x.set(\\freq, 330);
 
 
 } // end class
+
+
+SDP : SynthDefPool {}
